@@ -8,10 +8,12 @@ import re
 
 class WeChat:
 	PATTERN_GROUPID = re.compile(r'\d+')
+	WECHAT_BASE_URL = ''
 	
 	def __init__(self,url,Corpid,Secret): 
-		url = '%s/cgi-bin/gettoken?corpid=%s&corpsecret=%s' % (url,Corpid,Secret)
-		res = self.doRequest(url)
+		self.WECHAT_BASE_URL = url
+		getTokenUrl = '%s/cgi-bin/gettoken?corpid=%s&corpsecret=%s' % (self.WECHAT_BASE_URL,Corpid,Secret)
+		res = self.doRequest(getTokenUrl)
 		self.token = res['access_token']
 #		print self.token
 		
@@ -30,7 +32,7 @@ class WeChat:
 	def sendMessage(self,userlist,content,agentid=0):
 		self.userlist = userlist
 		self.content = content
-		url = 'https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=%s' % self.token
+		url = '%s/cgi-bin/message/send?access_token=%s' % (self.WECHAT_BASE_URL, self.token)
 		data = {
 					"touser": "",
 					"toparty": "",
@@ -44,7 +46,7 @@ class WeChat:
 				}
 		# if the userlist is all digits, consider it as a group id
 		if self.PATTERN_GROUPID.match(userlist):
-			data['toparty'] = userlist
+			data['toparty'] = ""+userlist
 		else:
 			data['touser'] = userlist
 		data['agentid'] = agentid
@@ -52,18 +54,18 @@ class WeChat:
 		data = json.dumps(data,ensure_ascii=False,encoding='utf-8')
 		res = self.doRequest(url,method='post',data=data)
 		if res['errmsg'] == 'ok':
-			print 'send sucessed!!!'
+			print 'Message send sucessfully!'
 		else:
-			print 'send failed!!'
+			print 'Message sent failed!'
 			print res
 
 
 if __name__ == '__main__':  
 	reload(sys)
 	sys.setdefaultencoding( "utf-8" )
-	userlist = sys.argv[1]
-	content = sys.argv[2:]
-	content = '\n'.join(content)
+	userlist = sys.argv[1]		# The first parameter is the target user/group
+	content = sys.argv[2:]		# The following parameters are the content
+	content = '\n'.join(content)	# Merget all content into one string
 	
 #    output = open('/tmp/log.log', 'a')
 #    output.write(userlist)
@@ -74,9 +76,9 @@ if __name__ == '__main__':
 #    output.close()
 
 	# TODO: Replace with your own settings
-	Corpid = '------------'
-	Secret = '++++++++++++'
-	AgentID = 1
+	Corpid = 'ww333851b8aab93694'
+	Secret = 'cX6CyP7qG96sCGHKfPOPeFv3PyQV47K4quMo21N9lNk'
+	AgentID = 1000003
 	url = 'https://qyapi.weixin.qq.com'
 
 	WeChat = WeChat(url,Corpid,Secret)
